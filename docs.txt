@@ -1,0 +1,242 @@
+Ideas; Items that you unlock include modes;
+Option for 1-player C-stick smashes. Just gotta NOP out 8016B480
+
+Option for Character Trophies, one per mode? 
+
+Goal settings; Trophy Hunt, collect X trophies
+Events; beat Event 51
+Option for Eventsanity?
+20-coin packs are definitely going in the item pool
+Option for Bonus-sanity
+Progressive events unlock?
+Option to turn off bonuses that would be hard for one person
+Option to just disable some specific checks, maybe
+Progressive Mode Difficulty
+Option for itemsanity later (adds items as items you can get, not checks)
+I want to add an option to lock ALL characters (or unlock all by default)
+I already know how to do this. I can just make my own bitfield that returns 1A if they aren't unlocked
+Also eventually maybe Movesanity
+Stock Capacity
+Option to randomize event matches
+Random thought- Can I modify text to show item names? I might be able to do the Messages. Maybe trophy names from like the lottery
+We'll say that 11-combo in training requires just Yoshi to do the combo?
+Progressive Event Pack
+Option to start with 1 random 1Player mode- Either a Main one or Side one
+Increase the Coin rate
+Unlock for melee types like Coin battle?
+Should I have Progressive Trophy Pool or keep the original reqs?
+IDEA I WANT TO DO!!! I can make the Vs match count just go up by 5 instead of reducing the count.
+Then I have an option for "Max VS Mode checks"
+If I can track the Stage ID, maybe I can add Past and other stages to All-Star or Classic
+Should I add one MORE event pack for allowing selection of the mode at all?
+SAVE NAME: SuperSmashBros0110290334
+MY SAVE NAME
+
+``SSBMAP_PlayerNameDummyA1111``
+
+If I encode the player name I need to modify multidata so it's not 2 bytes
+
+Moves I would add:
+	Neutral Special
+	Down Special
+	Up Special
+	Side Special
+	Progressive Grab (Grab-Throw)
+	Progressive shield?
+	Shield
+	Double Jump
+	Smash Attacks
+	Taunt
+
+OPTION:
+	Include Multiplayer Bonuses
+	Include Annoying Bonuses
+	Include Extreme Bonuses
+	Option for Mew/Celebi to be checks
+	Eventsanity
+	Include Disk-Kun check
+	List option for Goals
+	-Event 51
+	-Giga Bowser
+	-Crazy Hand
+	Eventsanity (All events), otherwise only major events unlock checks
+
+FILLER ITEMS:
+Coins
+Stock
+Tomato/Heart Container/Food
+
+Achivements/notices
+DOC IDEA; for trophies, I can use the 8th bit/ (new) flag to determine they have been checked.
+
+-----------
+$8045C395- Start of trophy data
+$8045C386- Language
+$8045C391- Trophy Count (Unique trophies)
+$80BEEBDE- Current lottery coin amount
+$8047077A- Stock going into a game
+$803F0EF1- Stock select count
+$80470778- Selected character
+$804A2856- Table of owned trophies? The check for a new trophy in the lottery seems to reference if a trophy is owned here, rather than the actual trophy table
+$8045BF29- Bitfield of unlocked characters
+$8045BF2A/B- 2 byte bitfield of unlocked stages
+$8045C348- Giant bitfield table of unlocked Bonuses
+$8045C20C- Bitfield table of unlocked Messages
+$8045C0DF- Total Vs. Matches
+$801894F4 controls item spawning through Training. Item ID is in R25
+	The actual spawn routine MIGHT be $8026D258 using R4 as ID?
+$8112F062- Items enabled/disabled
+$8045C10A is the Coin Count. Every 0x0B coins is 1 Coin
+$8045ABF5 is the Current event. Not selected, current playing/picked
+$8045AC3C seems to be char IDs (1 per player)
+$8045C0F4- Vs Play Time (4 bytes)
+$8045C0F5- Combined Vs Play Time (4 bytes)
+$80472CBD- Continues used
+$8045C12F- Events Cleared Table
+$8045C20C- All-Star ulocked (bit $40. only updates when reloading menu)
+$804ee8f8- Idk some sort of stack? When throwing a pokeball it contains a table of rollable pokemon?
+$803f2ed0 might be some ROM table of pokemon?
+$80825948 has some table of Pokémon rates? this value specifically is the rate for Mew- Change to 1E to spawn properly
+$80BDAEF8 is the Legendary table
+$8046DB93 is a var that checks for the Legendary Pokémon event.
+Loads a table of Pokémon specific to that event if it's set...
+$804706D8 is a table of Current Map Trophies. When switching maps, the trophies here will be added
+to the Temporary trophy table 
+$8045BF32 is the Vs count check for unlocking characters. I kinda gotta get rid of this...
+$80BEEB40 is the the trophy ID the lottery gives you
+IMPORTANT!!!!! $804A2853 is the Trophy Class
+$8045BF2C is the flag for All-Star unlock (bit 0x04)
+$80479d30 is the current Menu
+$8049e760 Current Music
+$8045BF68- Total Meters
+
+If I need it and  won't 80e9d560 has a ton of nothing memory
+------
+$80312380 is a check for if the new trophy is new. branch if its not.
+$80136850- Trophy unlock function? At least from the lottery...
+$80305134 compares if you have 99 of a trophy?
+At $80305128, R26 is the ID of the trophy you got
+$803052D4 compares the gotten trophy with 293. Dont want oob trophies ofc
+$8006CD68 runs a routine that adds percentage
+$801658C8 checks unlocked characters and compares with the bit in r4. needs investigation
+$803134C0 determines whether or not a trophy is New. if it is, r3 will be 80
+$8030567C checks if a trophy is owned when displaying New in the lottery.
+$801BAB6C seems to be a battle or Event Battle char init
+$80260DA0 checks Unlocked Chars in battle. If I nop it, they don't render, so...
+$80260C1C seems to be unlocks more specifically.
+$801730BC seems to be  check for unlocking Dr mario? checks continues
+$80173108 is the part specifically. it loads the character id into r3 and then starts it
+$801649EC handles unlocking characters
+$8015D8FC MIGHT unlock messages...
+$8015D834 checks if you won the unlock fight
+$8024CED4- Event count unlock checks
+$800693ac Character State Stuff
+$8027A8A8 compares to 191. Some sort of legendary check.
+$8027AB7C checks... something. If R3 is 1 it uses the legendary table?
+$801B5F50 is some sort of mode init for ALl-Star
+$80260A14 is the Random Character selector.
+$80380580 is deeeefinitely an RNG call. R3 is the max value.
+$80172DAC Checks for MEWTWO unlock. Play time is read from $8045bf34 in Seconds
+$801BFEB4 is checking for owned trophies when giving messages? Remember this in case i need to put it back
+$80034110 is the Character Data pointer lookup function. I could use this
+$80172F14 is the check for Vs Stage Unlock counts. I can tell because it compares 50
+$801734E4 reads some vs stages but is in a subroutine
+$803058BC is the check for the Birdo trophy. check if the trophy ID is 165.
+$80316438 is the Give trophy function. From the lottery? R3 contains the trophy id
+$8015D834 might be an All-Star checker? Oh obviously all-star doesn't check characters because you can erase them
+$801728D4 might be checking SOMETHING for all-star. I'm tired, investigate this later
+$80317E18 adds new trophies to the pool based on count?
+$803048C0 MIGHT be the Got it Message check
+$80316464 shows/loads the trophy model from lottery
+$80174090- Coin Checker for the Tom Nook trophy
+$800D3680 is the Kill Player func (called from 800d3204) R3 is a pointer to the player data?
+I've narrows down $803058B4/80304D30 as raising class
+--Trophy Pool Checks
+$80305894 checks the 250 Trophies pool (is the trophy count R0 less than 250)
+$80316848 loads the pool?
+$80316840 might also load the pool?
+$80305918 loads the 250 trophies pool in
+$801B9AB0 is some sort of Home-Run initializer. This loads the timer value specifically
+$8015D99C is checking trophies for messages? R30 contains a specific event trophy (Kraid, then UFO, then... etc)
+----
+vs checks
+$80172640 is the 4995 check
+------------
+Trophies from the server should increment the trophy Counter and give 1 of the trophy.
+
+$803173C8 checks the Percent? Also 803173D8
+------------
+First, check if continues > 0
+if not...
+Is the character Marth?
+	If yes, unlock Roy
+Is he character Mario?
+	If yes, unlock Dr. Mario
+---------------------------
+TODO;
+Lottery can sometimes say 0%
+Option for starting character
+Reduce the 10,000 meters requirement
+
+
+KNOWN ISSUES:
+The lottery sometimes says you have a 0% of new trophy. I tried. I don't know how to fix the percentage it shows you. Actually ROLLING trophies should consider checked trophies as unique properly
+
+-------------------------------
+FOR POKEMON DOCUMENTATION
+$8027A540 CHECKS THE ENCOUNTER RATE; 1/251 FOR MEW
+$8027A560 checks if Mew has been spawned already in the battle
+$8027A570 checks if Mew *can* spawn.
+I think one of these is an RNG call...
+Random port colors somehow? probably not gonna happen
+IMPORTANT!!! MY RECEIVED INDEX IS AT $8045C368!!!
+$80479D30 is the Menu Mode. 0x0D is for Trophy Collection- check trophy goal here
+--------
+FUTURE STUFF
+Instead of having birdo and the stages trophies always in; Subject them to the Random pool. If they're in, add their check
+Meters and KOs filler
+Game-specific logger?
+Maybe the Goal should be a list instead of a bunch of toggles
+IMPORTANT! MOVE ALL MY VARS THAT THE SERVER USES INTO GECKO ENGINE SO THEY DONT CHANGE WHEN I ADD CODE
+Make all-star not unlock itself
+Move Shuffle
+Item Shuffle
+Maybe instead of a global check for the trophy in the client, I can make messages show up in the menu when you get the trophy
+Maybe I can hook into the Tom Nook func for this?
+Progressive Mode Difficulty?
+Max 1-P Stock?
+Option for 10-man smash clears?
+All secret chars and all secret stages checks? On the messages
+Should i add a check for the Heart Container trophy? Maybe I should make all the VS trophies super low (Food, Smash Coin, Maxim, Heart Container) and put them in the Base pool. Now there's a thought. And the option can specifically be LONG vs checks
+Is it possible AT ALL to replace the characters with question mark icons
+------------------
+NOTES ON TROPHY CLASS
+The 250 trophy check, i noticed, checks if the trophy class is already set first. If it's not, then we check the count.
+$80305918- Sets Class R3.
+R4 and R5 might need to be 0 for this
+0- 1P Only
+1- Special trophies
+3- Base Pool
+4- Adventure/Classic
+5- 200 VS matches
+6- All Characters
+7- 250 Trophies
+8- Super Special (can't unlock this way)
+$803058B0 is where this is coming from
+$80312494/$800031F4- Set All Chars class
+0x04: Base class
+0x10: Adventure/Classic
+0x20: 200 vs
+0x40: All Characters
+0x80: 250 Trophies
+I think the Pool gets saved into your file?
+What do I Need
+I'm not fully sure why, but for the Class to update, $804A284C needs to be written to. 
+That's (r30 = 804a26b8 + 0x194). 250 trophies sets it to 2
+------------
+Trophy doc stuff
+is $80312380 the Sound checker?
+$80316450/54 checks if a trophy is owned to display the New text or not
+$803048C0 returns the amount of trophy R3
+
+The debug menu has an ITEM spawner mid match. This might help me find an item spawn function.

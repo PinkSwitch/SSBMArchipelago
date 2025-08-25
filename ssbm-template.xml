@@ -1,0 +1,36 @@
+<wiidisc version="1">
+	<id game="GAL" developer="01">
+		<region type="E"/> <!-- Only USA version supported -->
+	</id>
+	<options>
+		<section name="SSBM Archipelago Mod">
+			<option name="Player: {{ PLAYER_NAME }} | Slot: {{ SLOT_NUM }} | Seed: {{AUTH_ID }}" id="SSBM" default="1">
+				<choice name="Enabled"><patch id="SSBMAP"/></choice>
+			</option>
+		</section>
+	</options>
+	
+	<patch id="SSBMAP">
+		<!-- This section is automatically injected by Kamek -->
+		<memory offset="0x803049D8" value="68000000" />
+		<memory offset="0x803105A4" value="68000000" />
+		<memory offset="0x80310754" value="68000000" />
+		<memory offset="0x803BAC5C" value="{{ GAME_FILE_NAME}}" />
+		<!--<memory offset="0x80001800" value="{{ ENCODED_PLAYER_NAME}}" />-->
+		{% if CSTICK_SMASH_SOLO %}<memory offset="0x8016B480" value="60000000" />{% endif %}
+
+		{% if TROPHYCLASS_IN_POOL %}
+		<memory offset="0x80305898" value="0x4800001c" />
+		<memory offset="0x801741CC" value="0x60000000" />
+		<memory offset="0x801741E8" value="0x60000000" />
+		<memory offset="0x801741B0" value="0x60000000" />{% endif %}
+		
+		{% if DISABLE_TAP_JUMP %}
+		<memory offset="0x800CAF14" value="0x4800001c" />
+		<memory offset="0x800CB998" value="0x48000014" />
+		<memory offset="0x800CAFC0" value="0x48000028" />
+		{% endif %}
+		$KF$
+	</patch>
+	
+</wiidisc>
