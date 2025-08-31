@@ -26,17 +26,28 @@ extern "C" void unlock_trophy_class_real();
 extern "C" void load_1p_pool();
 extern "C" void count_trophies();
 extern "C" void CheckTrophyOwned();
+extern "C" void HideCharIcons();
+extern "C" void get_lotto_trophy();
 
-int UnlockedCharactersMain = 0x00000000;
-int EventsTable = 0xFFFF0000;
-unsigned char UnlockedTrophyClasses = 0x00;
+#define UnlockedCharactersMain_ADDR  0x80001800
+#define UnlockedCharactersMain (*(volatile int*)UnlockedCharactersMain_ADDR)
+
+#define EventsTable_addr  0x80001804
+#define EventsTable (*(volatile int*)EventsTable)
+
+#define UnlockedTrophyClasses_addr  0x80001808
+#define UnlockedTrophyClasses (*(volatile int*)UnlockedTrophyClasses_addr)
+
+#define LotteryRig_addr  0x80001810
+#define LotteryRig (*(volatile int*)LotteryRig_addr)
+
 unsigned short CurTrophyValue = 0x0000;
 
 char CharLockedEvents[21] = { //Which events have characters locking them
 	0x00, 0x01, 0x04, 0x0C, 0x0F, 0x10,
 	0x11, 0x12, 0x18, 0x1A, 0x1C, 0x1F,
-	0x20, 0x21, 0x22, 0x23, 0x26, 0x27,
-	0x28, 0x29, 0x2A
+	0x20, 0x21, 0x22, 0x23, 0x26, 0x28,
+	0x29, 0x2A, 0x2C
 };
 
 char EventCharacters[21] = { //Which characters are on X event
@@ -153,8 +164,8 @@ kmWrite32(0x803161E4, 0x2c030000); // This wont work because the trophy is alrea
 //I should make this a CheckIfUnlocked sub?
 kmBranchDefAsm(0x80260C18, NULL) {  // When hovering over a character, check if the Character Unlock Bit is set to control it as unlocked.
 	nofralloc
-	lis r24, UnlockedCharactersMain@ha
-	addi r24, r24, UnlockedCharactersMain@l
+	lis r24, UnlockedCharactersMain_ADDR@ha
+	addi r24, r24, UnlockedCharactersMain_ADDR@l
 	lwz r0, 0(r24)
 	li r24, 1
 	slw r24, r24, r20 // Load the bit value of the char into memory
@@ -168,8 +179,8 @@ CharNotUnlocked:
 
 kmBranchDefAsm(0x8025FB78, NULL) {  // Check if random character is unlocked
 	nofralloc
-	lis r31, UnlockedCharactersMain@ha
-	addi r31, r31, UnlockedCharactersMain@l
+	lis r31, UnlockedCharactersMain_ADDR@ha
+	addi r31, r31, UnlockedCharactersMain_ADDR@l
 	lwz r29, 0(r31)
 	li r31, 1
 	slw r31, r31, r3
@@ -186,8 +197,8 @@ GetRandChar:
 // Event Mode
 kmBranchDefAsm(0x8024CEC4, NULL) {  // Check the Progressive Event Packs
 	nofralloc
-	lis r3, EventsTable@ha
-	addi  r3, r3, EventsTable@l
+	lis r3, EventsTable_addr@ha
+	addi  r3, r3, EventsTable_addr@l
 	lwz   r31, 0(r3)
 	andi. r31, r31, 0xFFFF
 	cmpwi r31, 0
@@ -242,8 +253,8 @@ EventHasCharacter:
 	lbz r4, 0(r3)
 	li r3, 1
 	slw r4, r3, r4
-	lis r5, UnlockedCharactersMain@ha
-	addi r5, r5, UnlockedCharactersMain@l
+	lis r5, UnlockedCharactersMain_ADDR@ha
+	addi r5, r5, UnlockedCharactersMain_ADDR@l
 	lwz r5, 0(r5)
 	and r4, r4, r5
 	cmpwi r4, 0
@@ -264,6 +275,7 @@ kmWrite32(0x8027A4F4, 0x38600064); //Change Celebi to 1/100 instead of 1/251
 //////////////////////////////////////////
 //Trophy Collection
 kmBranchDefAsm(0x8017E2F0, NULL) {  // Unlock picked up trophies immediately
+	sthx r3, r7, r0
 	lis r5, 0x8045
 	ori r5, r5, 0xC394
 	mulli r3, r3, 2
@@ -276,7 +288,7 @@ kmBranchDefAsm(0x8017E2F0, NULL) {  // Unlock picked up trophies immediately
 
 ///////////////////////////////////////////
 //Coins
-kmBranchDefAsm(0x801624F0, NULL) {  // Unlock picked up trophies immediately
+kmBranchDefAsm(0x801624F0, NULL) {  // Multiply coin rate by 10
 	nofralloc
 	mulli r28, r28, 10
 	add r28, r29, r28
@@ -324,8 +336,8 @@ kmBranchDefAsm(0x8022C820, NULL) {  // Lock Stadium Modes
 asm void GetModeByte(void)
 {
     nofralloc
-    lis   r4, UnlockedCharactersMain@ha
-    addi  r4, r4, UnlockedCharactersMain@l
+    lis   r4, UnlockedCharactersMain_ADDR@ha
+    addi  r4, r4, UnlockedCharactersMain_ADDR@l
     lbz   r4, 0(r4)
     andi. r4, r4, 0x00FE    // clear Roy bit
     blr
@@ -370,7 +382,7 @@ kmCall(0x8017331C, CheckUnlockedCharacters);
 kmWrite32(0x80172D90, 0x38600002); // Mewtwo
 kmCall(0x80172D94, CheckUnlockedCharacters);
 
-kmWrite32(0x80173464, 0x38600002); // Falco
+kmWrite32(0x80173464, 0x38600100); // Falco
 kmCall(0x80173470, CheckUnlockedCharacters);
 
 kmWrite32(0x801A60B0, 0x38600000); // Prevent characters from checking the VS quota
@@ -472,8 +484,8 @@ kmBranchDefAsm(0x80317E10, NULL) {  // Update Lottery pool
 	nofralloc
 	li r6, 4
 CheckClass:
-	lis r5, UnlockedTrophyClasses@ha
-	addi r5, r5, UnlockedTrophyClasses@l
+	lis r5, UnlockedTrophyClasses_addr@ha
+	addi r5, r5, UnlockedTrophyClasses_addr@l
 	lbz r5, 0(r5)
 	li r4, 1
 	slw r3, r4, r6
@@ -499,8 +511,8 @@ DoneUnlocks:
 
 kmBranchDefAsm(0x801C5A40, NULL) {  // Update 1P Pool
 	nofralloc
-	lis r3, UnlockedTrophyClasses@ha
-	addi r3, r3, UnlockedTrophyClasses@l
+	lis r3, UnlockedTrophyClasses_addr@ha
+	addi r3, r3, UnlockedTrophyClasses_addr@l
 	lbz r3, 0(r3)
 	andi. r3, r3, 0x20
 	cmpwi r3, 0
@@ -517,4 +529,90 @@ PoolDone:
 	}
 ///////////
 kmWrite32(0x80173EB8, 0x38002710); //Reduce Meter requirement
-//:)
+////////////
+//Char Select Icons
+
+kmWrite8(0x803F10DB, 0x68); //Mario
+
+kmWrite8(0x803F10E3, 0x68); //Bowser
+
+kmWrite8(0x803F10E7, 0x68); //Peach
+
+kmWrite8(0x803F10EB, 0x68); //Yoshi
+
+kmWrite8(0x803F10EF, 0x68); //DK
+
+kmWrite8(0x803F10F3, 0x68); //Falcon
+
+kmWrite8(0x803F10FF, 0x68); //Fox
+
+kmWrite8(0x803F1103, 0x68); //Ness
+
+kmWrite8(0x803F1107, 0x68); //Ice Climbers
+
+kmWrite8(0x803F110B, 0x68); //Kirby
+
+kmWrite8(0x803F110F, 0x68); //Samus
+
+kmWrite8(0x803F1113, 0x68); //Zelda
+
+kmWrite8(0x803F1117, 0x68); //Link
+
+kmWrite8(0x803F1123, 0x68); //Pikachu
+
+kmCall(0x80264804, HideCharIcons);
+
+asm void HideCharIcons(void)
+{
+	nofralloc
+	lis r3, UnlockedCharactersMain_ADDR@ha
+	addi r3, r3, UnlockedCharactersMain_ADDR@l
+	lwz r3, 0(r3)
+	li r4, 1
+	slw r5, r4, r17
+	and r3, r5, r3
+	cmpwi r3, 0
+	beq HideCharPic
+	li r3, 1
+	blr
+
+HideCharPic:
+	li r3, 0
+	blr
+}
+////////////////
+//Kirby Hat 4 Check
+kmCallDefAsm(0x80174060) {  // Actually check the Kirby Hat 4 criteria you cheating stinkwads
+	nofralloc
+	lis r3, 0x8045
+	ori r3, r3, 0xBF29
+	lbz r3, 0(r3)
+	andi. r3, r3, 0x1F
+	cmpwi r3, 0x1F
+	beq GiveHatTrophy
+	li r3, 0
+GiveHatTrophy:
+	blr
+	}
+////////////////
+//Lottery rigger
+kmBranchDefAsm(0x8031597C, NULL) {  // Rig the lottery to be a specific trophy
+	nofralloc
+	lis r4, LotteryRig_addr@ha
+	addi r4, r4, LotteryRig_addr@l
+	lhz r4, 0(r4)
+	cmpwi r4, 0
+	beq GetNormalTrophy
+	subi r4, r4, 1
+	mr r3, r4
+GetNormalTrophy:
+	stw r3, 0x0020(r29)
+	b get_lotto_trophy
+	}
+
+
+
+//MOVE SHUFFLE
+//800D6868- Neutral Special, Grounded
+//800D6904- Down Special, Grounded
+//These run for all players, I need to check that it's a human.

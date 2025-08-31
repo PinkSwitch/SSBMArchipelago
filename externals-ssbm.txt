@@ -19,3 +19,5 @@ load_base_pool = 0x80317E14
 unlock_trophy_class_real=0x8031234C
 load_1p_pool = 0x801C5A44
 count_trophies = 0x80304910
+UnlockedCharAddr = 0x80001804
+get_lotto_trophy = 0x80315980

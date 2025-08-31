@@ -41,25 +41,20 @@ Moves I would add:
 	Down Special
 	Up Special
 	Side Special
-	Progressive Grab (Grab-Throw)
-	Progressive shield?
-	Shield
-	Double Jump
-	Smash Attacks
+	Progressive Grab x 3 (Grab > Pummel > Throw)
+	Neutral Aerial
+	Forward Aerial
+	Up Aerial
+	Back Aerial
+	Progressive Shield > Dodge
+	Up Smash
+	Down Smash
+	Side Smash
+	Up Tilt
+	Side Tilt
+	Down Tilt
+	Dash Attack
 	Taunt
-
-OPTION:
-	Include Multiplayer Bonuses
-	Include Annoying Bonuses
-	Include Extreme Bonuses
-	Option for Mew/Celebi to be checks
-	Eventsanity
-	Include Disk-Kun check
-	List option for Goals
-	-Event 51
-	-Giga Bowser
-	-Crazy Hand
-	Eventsanity (All events), otherwise only major events unlock checks
 
 FILLER ITEMS:
 Coins
@@ -107,8 +102,9 @@ $80BEEB40 is the the trophy ID the lottery gives you
 IMPORTANT!!!!! $804A2853 is the Trophy Class
 $8045BF2C is the flag for All-Star unlock (bit 0x04)
 $80479d30 is the current Menu
-$8049e760 Current Music
+$804d7767 Current Music, can use this for music rando
 $8045BF68- Total Meters
+$803F0B5D or so (actually 803f0a80?) is some table of char data. Luigi's id is the one mentioned
 
 If I need it and  won't 80e9d560 has a ton of nothing memory
 ------
@@ -158,6 +154,7 @@ $80316840 might also load the pool?
 $80305918 loads the 250 trophies pool in
 $801B9AB0 is some sort of Home-Run initializer. This loads the timer value specifically
 $8015D99C is checking trophies for messages? R30 contains a specific event trophy (Kraid, then UFO, then... etc)
+$80174060- IMPORTANT! This is part of the All Characters unlocks. If I need to, I can check around this area.
 ----
 vs checks
 $80172640 is the 4995 check
@@ -174,9 +171,15 @@ Is he character Mario?
 	If yes, unlock Dr. Mario
 ---------------------------
 TODO;
+Test 10-man
+Rigging
+For some reason my Char Select Icons table adjustments causes the secret icons to break? I wonder if something is intertwined somehow. Maybe I should go back to trying to figure out the question marks...
 Lottery can sometimes say 0%
-Option for starting character
-Reduce the 10,000 meters requirement
+Command to Rig the lottery pool- Pay extra coins to guarantee you get a specific trophy
+I think my Percent Checker code might not be working? like how did I get these numbers
+Master Hand goal
+Remove the Stage trophies from always being in the pool; remove/add their checks accordingly
+Add a Rig command
 
 
 KNOWN ISSUES:
@@ -193,6 +196,8 @@ IMPORTANT!!! MY RECEIVED INDEX IS AT $8045C368!!!
 $80479D30 is the Menu Mode. 0x0D is for Trophy Collection- check trophy goal here
 --------
 FUTURE STUFF
+Option to change default ruleset to Stock?
+Option to make Home-Run Easier by giving 15 or 20 seconds?
 Instead of having birdo and the stages trophies always in; Subject them to the Random pool. If they're in, add their check
 Meters and KOs filler
 Game-specific logger?
@@ -240,3 +245,28 @@ $80316450/54 checks if a trophy is owned to display the New text or not
 $803048C0 returns the amount of trophy R3
 
 The debug menu has an ITEM spawner mid match. This might help me find an item spawn function.
+
+Somehow 80264834 is helping me find out how to disable pictures. if I NOP it, Zelda and Pikachu disappear, but only them...
+If I load 0 at $80264804 Zelda gets blanked?
+
+OKAY! The pictures thing happens in 2 parts.
+1. $80264804 runs a routine that checks if the character is technically unlocked or not. It returns 1 if it is and 0 if not.
+
+2. $803f10d4 contains a table of Unlock handlers. 
+$80264868- Lockable
+$802648D0- Always unlocked. I need to change these to be Lockable and modify the above routine
+OKAY! So it turns out that this is not quite it. This table defines whether or not a portait is Invisible when locked. 68- Invisible, D0- Visible. The ?? check happens later...
+This table is read at $8026485C btw
+$802648F8 calls a routine. If I skip it, all chars unlock. So this is a lock check?
+
+$80260CB4 calls a routine that flashes the icon
+$80260D08 loads 12 and stores it somewhere? if I nope it out they disappear afterwards
+This seems to be the time it lasts?
+$803F0D57 is a timer for clicking on char. When it hits 0, it resets their picture, even if it was previously a ?
+
+Found some interesting code. When the thing needs to flash, it loads 1 into r7 and calls $80364C08
+I finally got something. $810F3AA1 is 80 for ? and 0 for icon. This is jigglypuff, the character icon. The backround is 0x70 bytes down, another 80
+
+NEW LINE OF THINKING- 802648DC loads into R3 an address/offset for the char.
+A0 per char. 810e11e0 for mew2
+
