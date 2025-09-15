@@ -28,18 +28,29 @@ extern "C" void count_trophies();
 extern "C" void CheckTrophyOwned();
 extern "C" void HideCharIcons();
 extern "C" void get_lotto_trophy();
+extern "C" void roll_item();
+extern "C" void spawn_item();
+extern "C" void CheckItemLocks();
+extern "C" void spawn_hrc_bat();
+extern "C" void end_bat_spawn();
 
-#define UnlockedCharactersMain_ADDR  0x80001800
+#define UnlockedCharactersMain_ADDR  0x80001810
 #define UnlockedCharactersMain (*(volatile int*)UnlockedCharactersMain_ADDR)
 
-#define EventsTable_addr  0x80001804
+#define EventsTable_addr  0x80001814
 #define EventsTable (*(volatile int*)EventsTable)
 
-#define UnlockedTrophyClasses_addr  0x80001808
+#define UnlockedTrophyClasses_addr  0x80001818
 #define UnlockedTrophyClasses (*(volatile int*)UnlockedTrophyClasses_addr)
 
-#define LotteryRig_addr  0x80001810
+#define LotteryRig_addr  0x80001820
 #define LotteryRig (*(volatile int*)LotteryRig_addr)
+
+#define ItemsUnlocked_addr  0x80001824
+#define ItemsUnlocked (*(volatile int*)ItemsUnlocked_addr)
+
+#define ItemRegBackup_addr  0x80001829
+#define ItemRegBackup (*(volatile int*)ItemRegBackup_addr)
 
 unsigned short CurTrophyValue = 0x0000;
 
@@ -532,35 +543,35 @@ kmWrite32(0x80173EB8, 0x38002710); //Reduce Meter requirement
 ////////////
 //Char Select Icons
 
-kmWrite8(0x803F10DB, 0x68); //Mario
+//kmWrite8(0x803F10DB, 0x68); //Mario
 
-kmWrite8(0x803F10E3, 0x68); //Bowser
+//kmWrite8(0x803F10E3, 0x68); //Bowser
 
-kmWrite8(0x803F10E7, 0x68); //Peach
+//kmWrite8(0x803F10E7, 0x68); //Peach
 
-kmWrite8(0x803F10EB, 0x68); //Yoshi
+//kmWrite8(0x803F10EB, 0x68); //Yoshi
 
-kmWrite8(0x803F10EF, 0x68); //DK
+//kmWrite8(0x803F10EF, 0x68); //DK
 
-kmWrite8(0x803F10F3, 0x68); //Falcon
+//kmWrite8(0x803F10F3, 0x68); //Falcon
 
-kmWrite8(0x803F10FF, 0x68); //Fox
+//kmWrite8(0x803F10FF, 0x68); //Fox
 
-kmWrite8(0x803F1103, 0x68); //Ness
+//kmWrite8(0x803F1103, 0x68); //Ness
 
-kmWrite8(0x803F1107, 0x68); //Ice Climbers
+//kmWrite8(0x803F1107, 0x68); //Ice Climbers
 
-kmWrite8(0x803F110B, 0x68); //Kirby
+//kmWrite8(0x803F110B, 0x68); //Kirby
 
-kmWrite8(0x803F110F, 0x68); //Samus
+//kmWrite8(0x803F110F, 0x68); //Samus
 
-kmWrite8(0x803F1113, 0x68); //Zelda
+//kmWrite8(0x803F1113, 0x68); //Zelda
 
-kmWrite8(0x803F1117, 0x68); //Link
+//kmWrite8(0x803F1117, 0x68); //Link
 
-kmWrite8(0x803F1123, 0x68); //Pikachu
+//kmWrite8(0x803F1123, 0x68); //Pikachu
 
-kmCall(0x80264804, HideCharIcons);
+//kmCall(0x80264804, HideCharIcons);
 
 asm void HideCharIcons(void)
 {
@@ -598,11 +609,13 @@ GiveHatTrophy:
 //Lottery rigger
 kmBranchDefAsm(0x8031597C, NULL) {  // Rig the lottery to be a specific trophy
 	nofralloc
-	lis r4, LotteryRig_addr@ha
-	addi r4, r4, LotteryRig_addr@l
-	lhz r4, 0(r4)
+	lis r5, LotteryRig_addr@ha
+	addi r5, r5, LotteryRig_addr@l
+	lhz r4, 0(r5)
 	cmpwi r4, 0
 	beq GetNormalTrophy
+	li r3, 0
+	stw r3, 0(r5)
 	subi r4, r4, 1
 	mr r3, r4
 GetNormalTrophy:
@@ -610,6 +623,82 @@ GetNormalTrophy:
 	b get_lotto_trophy
 	}
 
+////////////////
+//Locked Items
+
+kmBranchDefAsm(0x8026C75C, NULL) {  // Lock Items that spawn in normally
+	nofralloc
+	li r30, 0
+	lis r4, ItemRegBackup_addr@ha
+	addi r4, r4, ItemRegBackup_addr@l
+	stw r3, 0(r4)
+RollItem:
+	mflr r0
+	b roll_item
+	}
+
+
+kmBranchDefAsm(0x8026C888, NULL) {  // Get an item, reroll if locked
+	nofralloc
+	cmpwi r3, 0x22
+	bgt DontLock
+	lis r4, ItemsUnlocked_addr@ha
+	addi r4, r4, ItemsUnlocked_addr@l
+	lwz r4, 0(r4)
+	cmpwi r4, 0
+	beq NoItemsUnlocked
+	//Todo; handle items above 0x1F
+	//Todo; if it tries to spawn an item it Can't, it freezes cause it rolls the same items again. Also, Carriers freeze if we only have capsules
+	li r0, 1
+	slw r0, r0, r3 //r29 is now the bit we need to check
+	and r0, r4, r0
+	cmpwi r0, 0
+	bne DontLock
+	cmpwi r30, 50
+	beq NoItemsUnlocked //Failsafe for rerolls
+	addi r30, r30, 1
+	lis r4, ItemRegBackup_addr@ha
+	addi r4, r4, ItemRegBackup_addr@l
+	lwz r3, 0(r4)
+	mflr r0
+	b roll_item
+DontLock:
+	blr
+NoItemsUnlocked:
+	li r3, 0xFFFFFFFF
+	b DontLock
+	}
+
+kmBranchDefAsm(0x80284860, NULL) {  // Spawn bat for HRC
+	nofralloc
+	lis r5, ItemsUnlocked_addr@ha
+	addi r5, r5, ItemsUnlocked_addr@l
+	lwz r5, 0(r5)
+	andi. r5, r5, 0x0800
+	cmpwi r5, 0
+	beq NoBat
+	li r0, 11
+	b spawn_hrc_bat
+NoBat:
+	li r0, 0xFF
+	b spawn_hrc_bat
+	}
+
+kmBranchDefAsm(0x80284878, NULL) {  // Control if bat spawns or not
+	nofralloc
+	cmpwi r0, 0xFF
+	beq NoBat
+	stw r0, 0x0014(sp)
+NoBat:
+	b end_bat_spawn
+	}
+
+//TODO!!!!! Items above the 4-byte limit aren't checked (Pokeball and smth i think)
+//My HRC code works but has invalid reads. Find a valid register.
+//Todo; HRC, training mode
+//Todo; maybe make a general func for Has Item in R3?
+//party ball still spawns food...?
+//WHY! WHY CANT I STOP IT FROM ERRORING????
 
 
 //MOVE SHUFFLE

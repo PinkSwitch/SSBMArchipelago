@@ -1,5 +1,5 @@
 <wiidisc version="1">
-	<id game="GAL" developer="01">
+	<id game="GAL" developer="01" version ="2">
 		<region type="E"/> <!-- Only USA version supported -->
 	</id>
 	<options>
@@ -17,6 +17,7 @@
 		<memory offset="0x80310754" value="68000000" />
 		<memory offset="0x803BAC5C" value="{{ GAME_FILE_NAME}}" />
 		{% if CSTICK_SMASH_SOLO %}<memory offset="0x8016B480" value="60000000" />{% endif %}
+		{% if AUTO_L_CANCEL %}<memory offset="0x8006B620" value="60000000" />{% endif %}
 
 		{% if TROPHYCLASS_IN_POOL %}
 		<memory offset="0x80305898" value="0x4800001c" />
@@ -28,6 +29,9 @@
 		<memory offset="0x800CAF14" value="0x4800001c" />
 		<memory offset="0x800CB998" value="0x48000014" />
 		<memory offset="0x800CAFC0" value="0x48000028" />
+		<memory offset="0x800D7430" value="0x60000000" />
+		<memory offset="0x800CB828" value="0x48000014" />
+		<memory offset="0x800CB070" value="0x4800001c" />
 		{% endif %}
 		$KF$
 	</patch>

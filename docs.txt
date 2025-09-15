@@ -65,7 +65,7 @@ Achivements/notices
 DOC IDEA; for trophies, I can use the 8th bit/ (new) flag to determine they have been checked.
 
 -----------
-$8045C395- Start of trophy data
+$2- Start of trophy data
 $8045C386- Language
 $8045C391- Trophy Count (Unique trophies)
 $80BEEBDE- Current lottery coin amount
@@ -171,16 +171,31 @@ Is he character Mario?
 	If yes, unlock Dr. Mario
 ---------------------------
 TODO;
-Test 10-man
-Rigging
+I think All-Star stops pawning trophies if you have all of them. I should investgate and swap to the Checked flag
+I should change the 1P ending to how characters cleared instead of trophies owned
+Difficulty option or HRC
+Remove the guaranteed trophies from being guaranteed
+Add Item Locking
+Change all event goal to 1-49
+Goal for event 50
+Allow /rig to not have spaces or whatever
+Option for expected HRC difficulty?
+Master/good/casual/baby
+Very Hard goal
+Double check my code used for uh.... lotter percent checker
+
+URGENT STUFF; Is it creating extra shit? Someone had 1 required trophy, and 1 in start inventory. It should have not generated any, but apparently it generated the one in start inventory?
+
+Check on how I did the Guaranteed trophies. Is it still creating them...?
+Option to reduce coin counts for continuing. Halve, quarter, default, or free
+Implement a version checker. I can have the client check the version, and store the generated version on the server via slot data
+
 For some reason my Char Select Icons table adjustments causes the secret icons to break? I wonder if something is intertwined somehow. Maybe I should go back to trying to figure out the question marks...
 Lottery can sometimes say 0%
-Command to Rig the lottery pool- Pay extra coins to guarantee you get a specific trophy
 I think my Percent Checker code might not be working? like how did I get these numbers
 Master Hand goal
 Remove the Stage trophies from always being in the pool; remove/add their checks accordingly
-Add a Rig command
-
+It's possible to get into training with no cpu somehow (Only with my hide char func)
 
 KNOWN ISSUES:
 The lottery sometimes says you have a 0% of new trophy. I tried. I don't know how to fix the percentage it shows you. Actually ROLLING trophies should consider checked trophies as unique properly
@@ -270,3 +285,31 @@ I finally got something. $810F3AA1 is 80 for ? and 0 for icon. This is jigglypuf
 NEW LINE OF THINKING- 802648DC loads into R3 an address/offset for the char.
 A0 per char. 810e11e0 for mew2
 
+Interesting. $8803F12D4 seems to be an Item struct of some kind
+Specifically, $803F1414 is a table containing pointers to something. If I zero it out, that item can't spawn. I can USE this!!!
+This is just a visual effect. But maybe I can trace this?
+
+FOR ITEM SHUFFLE::::::::
+My code can inject at $80189544. R4 is the ID of the item spawned.
+Turns out this is only for training mode...
+This needs more work.
+The visual table is a good start. the code that reads from it is $8026862c
+//////////
+MOVE SHUFFFLE!
+Jigglypuff Target Test needs either Side Special or Any Aerial besides down
+Luigi- ANY Aerial OR ANy Special
+Pikachu- Neutral or up special
+Ice Climbers- ANY Aerial or Any Special besides Up
+
+Is $80226324 spawn item? $8022631C stores it when using Debug item spawn...
+$80226478 Calls a spawn item, from Debug Spawn
+$80268B18- Spawn Item
+$8005FDDC- Spawner Visual
+For item spawning;
+Fix training mode
+Check items spawning from containers
+Home-run contest
+8026c8d4
+
+Important- 0x80453130; Pointer to char ata
+80284860- Spawner for the HRC bat
