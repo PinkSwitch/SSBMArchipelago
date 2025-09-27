@@ -71,12 +71,13 @@ char EventCharacters[21] = { //Which characters are on X event
 
 //////////////////////////////////
 //Trophy gallery code
-kmWrite32(0x803049D8, 0x68000000); // Prevent trophies from marking off the NEW text.
-kmWrite32(0x803105A4, 0x68000000); //
-kmWrite32(0x80310754, 0x68000000); //
-kmWrite32(0x8030B2F0, 0x68000000); //
+kmWrite32(0x803049D8, 0x7000fcff); // Prevent trophies from marking off the NEW text.
+kmWrite32(0x803105A4, 0x7000fcff); //
+kmWrite32(0x80310754, 0x7000fcff); //
+kmWrite32(0x8030B2F0, 0x7000fcff); //
 
-kmWrite32(0x803134C8, 0x48000024); // Trophies don't display new text
+kmWrite32(0x80304970, 0x70030200); // New text is controlled by Bit 0x2 instead of bit 0x80
+//kmWrite32(0x803134C8, 0x48000024); // Trophies don't display new text
 
 /////////////////////////////////
 //Lottery Trophies

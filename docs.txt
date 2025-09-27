@@ -65,7 +65,7 @@ Achivements/notices
 DOC IDEA; for trophies, I can use the 8th bit/ (new) flag to determine they have been checked.
 
 -----------
-$2- Start of trophy data
+$8045C394- Start of trophy data
 $8045C386- Language
 $8045C391- Trophy Count (Unique trophies)
 $80BEEBDE- Current lottery coin amount
@@ -183,6 +183,10 @@ Option for expected HRC difficulty?
 Master/good/casual/baby
 Very Hard goal
 Double check my code used for uh.... lotter percent checker
+(Make sure this isn't weird with trophies appending to the pool)
+Are starting inv trophies acting weird
+Is Rocket KO 1P only?
+Version checking
 
 URGENT STUFF; Is it creating extra shit? Someone had 1 required trophy, and 1 in start inventory. It should have not generated any, but apparently it generated the one in start inventory?
 
