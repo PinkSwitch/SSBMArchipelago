@@ -33,7 +33,15 @@ extern "C" void spawn_item();
 extern "C" void CheckItemLocks();
 extern "C" void spawn_hrc_bat();
 extern "C" void end_bat_spawn();
+extern "C" void CheckItemUnlocked();
+extern "C" void spawn_party_bombs();
+extern "C" void roll_partyball_prize();
+extern "C" void spawn_party_food();
+extern "C" void end_item_spawn();
+extern "C" void spawn_training_item();
+extern "C" void end_training_item();
 
+									
 #define UnlockedCharactersMain_ADDR  0x80001810
 #define UnlockedCharactersMain (*(volatile int*)UnlockedCharactersMain_ADDR)
 
@@ -71,13 +79,13 @@ char EventCharacters[21] = { //Which characters are on X event
 
 //////////////////////////////////
 //Trophy gallery code
-kmWrite32(0x803049D8, 0x7000fcff); // Prevent trophies from marking off the NEW text.
-kmWrite32(0x803105A4, 0x7000fcff); //
-kmWrite32(0x80310754, 0x7000fcff); //
-kmWrite32(0x8030B2F0, 0x7000fcff); //
+kmWrite32(0x803049D8, 0x68000000); // Prevent trophies from marking off the NEW text.
+kmWrite32(0x803105A4, 0x68000000); //
+kmWrite32(0x80310754, 0x68000000); //
+kmWrite32(0x8030B2F0, 0x68000000); //
 
-kmWrite32(0x80304970, 0x70030200); // New text is controlled by Bit 0x2 instead of bit 0x80
-//kmWrite32(0x803134C8, 0x48000024); // Trophies don't display new text
+//kmWrite32(0x80304970, 0x70030200); // New text is controlled by Bit 0x2 instead of bit 0x80
+kmWrite32(0x803134C8, 0x48000024); // Trophies don't display new text
 
 /////////////////////////////////
 //Lottery Trophies
@@ -629,7 +637,7 @@ GetNormalTrophy:
 
 kmBranchDefAsm(0x8026C75C, NULL) {  // Lock Items that spawn in normally
 	nofralloc
-	li r30, 0
+	li r14, 0
 	lis r4, ItemRegBackup_addr@ha
 	addi r4, r4, ItemRegBackup_addr@l
 	stw r3, 0(r4)
@@ -641,33 +649,46 @@ RollItem:
 
 kmBranchDefAsm(0x8026C888, NULL) {  // Get an item, reroll if locked
 	nofralloc
+	mflr r0
+	stw r0, 0x10(sp)
+
+
 	cmpwi r3, 0x22
 	bgt DontLock
 	lis r4, ItemsUnlocked_addr@ha
 	addi r4, r4, ItemsUnlocked_addr@l
 	lwz r4, 0(r4)
 	cmpwi r4, 0
-	beq NoItemsUnlocked
-	//Todo; handle items above 0x1F
-	//Todo; if it tries to spawn an item it Can't, it freezes cause it rolls the same items again. Also, Carriers freeze if we only have capsules
-	li r0, 1
-	slw r0, r0, r3 //r29 is now the bit we need to check
-	and r0, r4, r0
+	beq CheckHighUnlockByte
+ItemsUnlocked_check:
+	bl CheckItemUnlocked
 	cmpwi r0, 0
 	bne DontLock
-	cmpwi r30, 50
+	cmpwi r14, 50
 	beq NoItemsUnlocked //Failsafe for rerolls
-	addi r30, r30, 1
+	addi r14, r14, 1
 	lis r4, ItemRegBackup_addr@ha
 	addi r4, r4, ItemRegBackup_addr@l
 	lwz r3, 0(r4)
-	mflr r0
+	lwz r0, 0x10(sp)
+	mtlr r0
+
 	b roll_item
-DontLock:
-	blr
 NoItemsUnlocked:
 	li r3, 0xFFFFFFFF
 	b DontLock
+CheckHighUnlockByte:
+	lis r4, ItemsUnlocked_addr@ha
+	addi r4, r4, ItemsUnlocked_addr@l
+	addi r4, r4, 4 // Get the high byte
+	lbz r4, 0(r4) // Check the high byte too
+	cmpwi r4, 0 // If this is also 0, NONE of the items are unlocked
+	beq NoItemsUnlocked
+	b ItemsUnlocked_check
+DontLock:
+	lwz r0, 0x10(sp)
+	mtlr r0
+	blr
 	}
 
 kmBranchDefAsm(0x80284860, NULL) {  // Spawn bat for HRC
@@ -681,25 +702,108 @@ kmBranchDefAsm(0x80284860, NULL) {  // Spawn bat for HRC
 	li r0, 11
 	b spawn_hrc_bat
 NoBat:
-	li r0, 0xFF
+	li r0, 0x29
 	b spawn_hrc_bat
 	}
 
-kmBranchDefAsm(0x80284878, NULL) {  // Control if bat spawns or not
+
+kmBranchDefAsm(0x80289D70, NULL) {  // Check if we have Bob-ombs for the bobomb spawn from party ball
 	nofralloc
-	cmpwi r0, 0xFF
-	beq NoBat
-	stw r0, 0x0014(sp)
-NoBat:
-	b end_bat_spawn
+	lis r27, ItemsUnlocked_addr@ha
+	addi r27, r27, ItemsUnlocked_addr@l
+	lwz r27, 0(r27)
+	andi. r27, r27, 0x40 // Check that we own bob-ombs
+	cmpwi r27, 0
+	beq ReRollPrinze
+	lwz r27, 0x0010 (r28)
+	b spawn_party_bombs
+ReRollPrinze:
+	li r27, 0x0C
+	b roll_partyball_prize
+
 	}
 
-//TODO!!!!! Items above the 4-byte limit aren't checked (Pokeball and smth i think)
-//My HRC code works but has invalid reads. Find a valid register.
-//Todo; HRC, training mode
-//Todo; maybe make a general func for Has Item in R3?
-//party ball still spawns food...?
-//WHY! WHY CANT I STOP IT FROM ERRORING????
+kmBranchDefAsm(0x80289F3C, NULL) {  // Check if we have food for the party ball food spawn
+	nofralloc
+	lis r3, ItemsUnlocked_addr@ha
+	addi r3, r3, ItemsUnlocked_addr@l
+	lbz r27, 1(r3)
+	andi. r3, r27, 0x04 // Check that we own food
+	cmpwi r3, 0
+	beq ReRollPrinze
+	li r3, 5
+	b spawn_party_food
+ReRollPrinze:
+	b roll_partyball_prize
+
+	}
+
+
+kmWrite32(0x801894D4, 0x60000000); // Nop out the item spawn sound in training. We play it later
+
+kmBranchDefAsm(0x801894F4, NULL) {  // Implement Item Locks for training mode
+	nofralloc
+	mr r3, r25 // Get the ITEM'S ID
+	bl CheckItemUnlocked
+	cmpwi r0, 0
+	beq DoesntHaveItem
+	li r3, 8
+	bl play_sound
+	li r3, 0
+	bl spawn_training_item
+	b end_training_item
+DoesntHaveItem:
+	li r3, 3
+	bl play_sound
+	b end_item_spawn
+	}
+
+
+///////////////////////////
+//1P ending
+//This is for the trophies shown on the post-1P clear screen
+//I want the total collection to show characters that have beaten the mode instead of just whether you own their Trophy or not
+// But this is minor, and out of scope, so I'm not interested right now
+//kmCallDefAsm(0x801A8E78) {  // Check the character completion instead of trophy owned for 1P ending screen
+	//this doesnt work because FUCKING SHOCKER, different modes have different trophies
+	//R28 = ID
+	//r3 = 1 if owned
+	//nofralloc
+	//lis r3, 0x8045
+	//ori r3, r3, 0xC394
+	//mulli r4, r28, 2
+	//add r3, r3, r4
+	//lbz r3, 0(r3)
+	//andi. r3, r3, 0x80
+	//blr
+	//}
+//////////////////////////////////
+// Checks if we've unlocked r3 item ID or not. Returns 1 if we do, 0 if we don't
+asm void CheckItemUnlocked(void)
+{
+	nofralloc
+	stw r29, 0(r1)
+	mr r29, r3
+	lis r4, ItemsUnlocked_addr@ha
+	addi r4, r4, ItemsUnlocked_addr@l
+	cmpwi r3, 0x1F
+	blt FirstSet
+	addi r4, r4, 4
+	subi r3, r3, 0x1F
+	lbz r4, 0(r4)
+	b SkipLoad
+FirstSet:
+	lwz r4, 0(r4)
+SkipLoad:
+	li r0, 1
+	slw r0, r0, r3 //r29 is now the bit we need to check
+	and r0, r4, r0
+	mr r3, r29
+	lwz r29, 0(r1)
+    blr
+}
+
+//Todo; See if peachs' downspecial works
 
 
 //MOVE SHUFFLE

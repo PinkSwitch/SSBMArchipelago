@@ -1,0 +1,99 @@
+Mario:
+	Bucket
+	Fire Flower
+	Daisy
+	Metal Mario
+	Toad
+	Racing Kart
+	Starman
+	Super Shroom
+
+Mario Enemies:
+	Raphael
+	Thwomp
+	Bob-omb
+	Baby Bowser
+	Birdo
+	Koopa Troopa
+	Lakitu
+
+Donkey Kong:
+	Barrel
+	Barrel Cannon
+	Klap Trap
+
+Pokémon Gen 1:
+	Blastoise
+	Bulbasaur
+	Clefairy
+	Goldeen
+	Poliwhirl
+	Snorlax
+	Squirtle
+	Weezing
+
+Pokémon Gen 2:
+	Bellossom
+	Crobat
+	Chikorita
+	Cyndaquil
+	Igglybuff
+	Heracross
+	Porygon2
+	Totodile
+	Scizor
+	Wobbuffet
+	Steelix
+
+Kirby:
+	Kirby Hat 1
+	Kirby Hat 2
+	Kirby Hat 3
+	Ball Kirby
+	Star Rod
+	Rick
+	Waddle Dee
+
+Star Fox:
+	Andross 64
+	Slippy Toad
+	
+
+Miscellaneous:
+	Donbe
+	Heririn
+	Ryota Hayami
+	ZERO-ONE
+	
+
+EarthBound:
+	Home-Run Bat
+	Mr. Saturn
+	Starman
+
+Smash Bros.:
+	Capsule
+	Coin
+	Crate
+	Egg
+	Fan
+	Party ball
+	Ray Gun
+
+F-Zero:
+	Dr. Stewart
+	Jody Summer
+
+Retro:
+	Balloon Fighter
+	Ducks
+	Dr. Wright
+	Flipper
+	Excitebike
+	Super Scope
+	Topi
+	Monster
+
+Metroid:
+	Metroid
+	Ridley

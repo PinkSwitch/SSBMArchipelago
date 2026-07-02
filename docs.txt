@@ -105,9 +105,17 @@ $80479d30 is the current Menu
 $804d7767 Current Music, can use this for music rando
 $8045BF68- Total Meters
 $803F0B5D or so (actually 803f0a80?) is some table of char data. Luigi's id is the one mentioned
+$804A0E30 is a timer until the next item spawns. Checked at 8026C8D4
+#8028A01C might be code for spawning things from a party ball?
+	8028A01C spawns Items 80289FF0 is the start
+	80289FCC spawns food...? 80289F68 probably the start
+	Definitely seems like 80289BE8 determines WHAT spawns out of a ball. Seems that 8028A0EC is the bail
+	80289D70 is bombs. 80289D68 is a comparison that looks for what we spawn... It does comparisons. These are the spawn odds.
+$80289D68 - Start of Party Ball prize checking
 
 If I need it and  won't 80e9d560 has a ton of nothing memory
 ------
+$80024030 - PlaySound
 $80312380 is a check for if the new trophy is new. branch if its not.
 $80136850- Trophy unlock function? At least from the lottery...
 $80305134 compares if you have 99 of a trophy?
@@ -174,23 +182,14 @@ TODO;
 I think All-Star stops pawning trophies if you have all of them. I should investgate and swap to the Checked flag
 I should change the 1P ending to how characters cleared instead of trophies owned
 Difficulty option or HRC
-Remove the guaranteed trophies from being guaranteed
-Add Item Locking
-Change all event goal to 1-49
-Goal for event 50
-Allow /rig to not have spaces or whatever
 Option for expected HRC difficulty?
 Master/good/casual/baby
 Very Hard goal
 Double check my code used for uh.... lotter percent checker
-(Make sure this isn't weird with trophies appending to the pool)
-Are starting inv trophies acting weird
-Is Rocket KO 1P only?
 Version checking
+Try hiding icons again
+Check the requirement for Pacifist
 
-URGENT STUFF; Is it creating extra shit? Someone had 1 required trophy, and 1 in start inventory. It should have not generated any, but apparently it generated the one in start inventory?
-
-Check on how I did the Guaranteed trophies. Is it still creating them...?
 Option to reduce coin counts for continuing. Halve, quarter, default, or free
 Implement a version checker. I can have the client check the version, and store the generated version on the server via slot data
 
